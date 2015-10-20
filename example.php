@@ -20,8 +20,10 @@ $app = new App(function(Scope $scope){
         echo "Fail".PHP_EOL;
     });
 
+    // PHP Notice:  Undefined variable
     $foo = $bar;
 
+    // PHP Fatal error, Call to a member function bar() on a non-object
     $foo->bar();
 
     echo "End".PHP_EOL;
