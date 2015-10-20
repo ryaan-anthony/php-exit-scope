@@ -2,7 +2,7 @@
 
 $filename = dirname(__FILE__).'/vendor/autoload.php';
 
-file_exists($filename) ? require $filename : exit('Run composer install'.PHP_EOL);
+file_exists($filename) ? require $filename : exit('Run `composer dump-autoload` to generate autoload files.'.PHP_EOL);
 
 $app = new App(function(Scope $scope){
 
