@@ -1,6 +1,3 @@
-# php-exit-scope
-Declare operations to run on scope exit.
-
 ## How to use:
 
 * Run `composer dump-autoload` to generate autoload files.
