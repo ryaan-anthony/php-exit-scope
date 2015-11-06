@@ -22,7 +22,7 @@ class App
      */
     function __construct(Closure $application)
     {
-        $this->scope = new Scope($this);
+        $this->scope = new Scope();
 
         $this->application = $application;
 
@@ -36,29 +36,21 @@ class App
      */
     public function run()
     {
-        $this->_run($this->application) ?
-            $this->_success() :
-            $this->_fail();
-    }
+        $isCompiled = $this->executeCallback($this->application);
+        
+        if ($isCompiled) {
 
-    /**
-     * Control flow
-     * @param Closure
-     * @return bool
-     */
-    public function _run(Closure $callback)
-    {
-        try {
+            $this->changeState(Scope::STATE_READY);
+            
+            $this->changeState(Scope::STATE_SUCCESS);
+                        
+        } else {
 
-            $callback($this->scope);
-
-        } catch (Exception $e) {
-
-            return false;
-
+            $this->changeState(Scope::STATE_FAIL);
+            
         }
 
-        return true;
+        $this->changeState(Scope::STATE_EXIT);
     }
 
     /**
@@ -85,25 +77,45 @@ class App
 
             $this->hasErrors = true;
 
-            $this->_fail();
+            $this->changeState(Scope::STATE_FAIL);
+
+            $this->changeState(Scope::STATE_EXIT);
+
+            exit;
 
         }
     }
 
-    /**
-     * App success
-     */
-    public function _success()
+    protected function changeState($state)
     {
-        $this->scope->SUCCESS();
+        $callbacks = $this->scope->getCallbacks($state);
+
+        foreach ($callbacks as $callback) {
+
+            $this->executeCallback($callback);
+
+        }
+
     }
 
     /**
-     * App fail
+     * Control flow
+     * @param Closure
+     * @return bool
      */
-    public function _fail()
+    protected function executeCallback(Closure $callback)
     {
-        $this->scope->FAIL();
+        try {
+
+            $callback($this->scope);
+
+        } catch (Exception $e) {
+
+            return false;
+
+        }
+
+        return true;
     }
 
 }

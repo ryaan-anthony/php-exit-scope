@@ -1,9 +1,10 @@
 <?php
 class Scope
 {
-    const SCOPE_EXIT = 1;
-    const SCOPE_FAIL = 2;
-    const SCOPE_SUCCESS = 3;
+    const STATE_READY = 0;
+    const STATE_EXIT = 1;
+    const STATE_FAIL = 2;
+    const STATE_SUCCESS = 3;
 
     /**
      * @var Closure[]
@@ -11,36 +12,31 @@ class Scope
     protected $callbacks = [];
 
     /**
-     * @var App
-     */
-    protected $app;
-
-    /**
-     * Initialize the scope
-     * @param App
-     */
-    function __construct(App $app)
-    {
-        $this->app = $app;
-    }
-
-    /**
      * Define the scope
      * @param Closure
-     * @param $scope
+     * @param int
      */
-    public function setScope(Closure $callback, $scope)
+    public function addCallback(Closure $callback, $state)
     {
-        $this->callbacks[$scope][] = $callback;
+        $this->callbacks[$state][] = $callback;
     }
 
     /**
      * @param int
      * @return array|Closure[]
      */
-    protected function getScope($scope)
+    public function getCallbacks($state)
     {
-        return isset($this->callbacks[$scope]) ? $this->callbacks[$scope] : [];
+        return isset($this->callbacks[$state]) ? $this->callbacks[$state] : [];
+    }
+
+    /**
+     * Define scope ready
+     * @param Closure
+     */
+    public function onReady(Closure $callback)
+    {
+        $this->addCallback($callback, self::STATE_READY);
     }
 
     /**
@@ -49,7 +45,7 @@ class Scope
      */
     public function onExit(Closure $callback)
     {
-        $this->setScope($callback, self::SCOPE_EXIT);
+        $this->addCallback($callback, self::STATE_EXIT);
     }
 
     /**
@@ -58,7 +54,7 @@ class Scope
      */
     public function onFail(Closure $callback)
     {
-        $this->setScope($callback, self::SCOPE_FAIL);
+        $this->addCallback($callback, self::STATE_FAIL);
     }
 
     /**
@@ -67,49 +63,7 @@ class Scope
      */
     public function onSuccess(Closure $callback)
     {
-        $this->setScope($callback, self::SCOPE_SUCCESS);
-    }
-
-    /**
-     * Run scope success
-     * @param Closure
-     */
-    public function SUCCESS()
-    {
-        $this->EXECUTE($this->getScope(self::SCOPE_SUCCESS));
-        $this->END();
-    }
-
-    /**
-     * Run scope fail
-     * @param Closure
-     */
-    public function FAIL()
-    {
-        $this->EXECUTE($this->getScope(self::SCOPE_FAIL));
-        $this->END();
-    }
-
-    /**
-     * Run scope exit
-     * @param Closure
-     */
-    public function END()
-    {
-        $this->EXECUTE($this->getScope(self::SCOPE_EXIT));
-        exit;
-    }
-
-    /**
-     * @param Closure[]
-     */
-    protected function EXECUTE(array $callbacks = [])
-    {
-        foreach ($callbacks as $callback) {
-
-            $this->app->_run($callback);
-
-        }
+        $this->addCallback($callback, self::STATE_SUCCESS);
     }
 
 }
